@@ -7,7 +7,7 @@ import { RouterModule } from '@angular/router';
   templateUrl: './app.component.html',
   styleUrls: ['./app.component.scss'],
   imports: [
-    RouterModule
+    RouterModule,
   ]
 })
 export class AppComponent {

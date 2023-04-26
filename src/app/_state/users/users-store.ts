@@ -1,40 +1,47 @@
-import { EntityAdapter, EntityState, createEntityAdapter } from "@ngrx/entity";
-import { createActionGroup, createFeature, createReducer, emptyProps, props } from "@ngrx/store";
+import { UserState, users } from "@app/_shared/models/user.interface";
+import { createAction, createReducer, on, props } from "@ngrx/store";
 
-const UsersStoreKey = "users";
 
-export interface User {
-    id: string;
-    firstName: string;
-    lastName: string;
-    maidenName: string;
-    age: number;
-    gender: string;
-    email: string;
-    phone: string;
-    birthDate: string;
+const userState: UserState = {
+    user: [],
+    loadingFlag: false
 }
 
-export interface UsersState extends EntityState<User> {
-    selectedUserId: string | null;
-}
+export const loadUserData = createAction('Load User Data');
 
-const usersAdapter: EntityAdapter<User> = createEntityAdapter<User>();
+export const loadUserDataSuccess = createAction('Load User Data Success', props<{ userData: users[] }>())
 
-const initialState: UsersState = usersAdapter.getInitialState({
-    selectedUserId: null
-});
+export const loadingSpinner = createAction('Loading Spinner', props<{ isLoading: boolean }>())
 
-export const UsersActions = createActionGroup({
-    source: UsersStoreKey,
-    events: {
-        Init: emptyProps(),
-        'Save Initial Users': props<{ users: User[] }>(),
+export const editLoadUserData = createAction('Edit Load User Data', props<{ userData: users }>())
+
+
+const _UsersReducer = createReducer(userState, on(loadUserDataSuccess, (state: UserState, action: any) => {
+    return {
+        ...state,
+        user: action
     }
-});
+}),
+    on(loadingSpinner, (state: UserState, action: any) => {
+        return {
+            ...state,
+            loadingFlag: action.isLoading
+        }
+    }), on(editLoadUserData, (state: any, action: any) => {
+        let userStateData = { ...state.user };
+        delete userStateData.type;
 
-export const UsersReducer = createFeature({
-    name: UsersStoreKey,
-    reducer: createReducer(initialState)
-});
+        for (let key in userStateData) {
+            if (userStateData[key].id === action.userData.id) {
+                let updateUserData = { ...userStateData[key], firstName: action.userData.firstName, password: action.userData.password, email: action.userData.email, username: action.userData.username }
+                delete userStateData[key];
+                return { ...state, user: { ...userStateData, [key]: updateUserData } }
+            }
+        }
+    }),)
+
+export function UsersReducer(state: any, action: any) {
+    return _UsersReducer(state, action)
+}
+
 
